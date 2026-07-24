@@ -15,13 +15,11 @@ app.use(express.urlencoded({extended: true, limit: "16kb"}))
 app.use(express.static("public"))
 app.use(cookieParser())
 
-app.get("/test", (req, res) => {
-    res.status(200).json({ message: "Express is alive on port 8000!" });
-});
+
 // Routes import
 import userRouter from "./routes/user.routes.js"
-
+import sessionRouter from "./routes/session.routes.js"
 // Routes declaration
 app.use("/api/users", userRouter)
-
+app.use("/api/sessions", sessionRouter)
 export { app }

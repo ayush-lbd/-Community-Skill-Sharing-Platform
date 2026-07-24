@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 const userSchema = new mongoose.Schema({
-    name: { 
+        name: { 
             type: String, 
             required: [true, "Name is required"],
             trim: true
@@ -26,6 +26,10 @@ const userSchema = new mongoose.Schema({
         avatar: { 
             type: String, //from cloudinary
             required: [true, "Avatar URL is required"]
+        },
+        coverImage: { 
+            type: String, //from cloudinary
+            default: "" 
         },
         skillsToTeach: [
             { type: String }

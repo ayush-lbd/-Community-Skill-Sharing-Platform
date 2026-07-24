@@ -214,6 +214,153 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     );
 });
 
+const updateUserCoverImage = asyncHandler(async (req, res) => {
+    const coverImageLocalPath = req.file?.path;
+
+    if (!coverImageLocalPath) {
+        throw new ApiError(400, "Cover image file is missing");
+    }
+
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+
+    if (!coverImage?.url) {
+        throw new ApiError(500, "Error while uploading cover image");
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        { $set: { coverImage: coverImage.url } },
+        { new: true, select: "-password -refreshToken" }
+    );
+
+    return res.status(200).json(
+        new ApiResponse(200, user, "Cover image updated successfully")
+    );
+});
+
+const updateUserAvatar = asyncHandler(async (req, res) => {
+    const avatarLocalPath = req.file?.path;
+
+    if (!avatarLocalPath) {
+        throw new ApiError(400, "Avatar file is missing");
+    }
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+
+    if (!avatar?.url) {
+        throw new ApiError(500, "Error while uploading avatar to Cloudinary");
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        { $set: { avatar: avatar.url } },
+        { new: true, select: "-password -refreshToken" }
+    );
+
+    return res.status(200).json(
+        new ApiResponse(200, user, "Avatar updated successfully")
+    );
+});
+
+const updateSkillsToTeach = asyncHandler(async (req, res) => {
+    const { skills } = req.body; // Expecting an array of strings from the frontend
+
+    if (!skills || !Array.isArray(skills)) {
+        throw new ApiError(400, "Please provide a valid array of skills");
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        { $set: { skillsToTeach: skills } },
+        { new: true, select: "-password -refreshToken" }
+    );
+
+    return res.status(200).json(
+        new ApiResponse(200, user, "Skills updated successfully")
+    );
+});
+
+const rateUser = asyncHandler(async (req, res) => {
+    
+    const { targetUserId } = req.params; 
+    
+    
+    const { score } = req.body; 
+    
+    const raterId = req.user._id;
+
+    if (!score || score < 1 || score > 5) {
+        throw new ApiError(400, "Please provide a valid score between 1 and 5");
+    }
+
+    if (targetUserId === raterId.toString()) {
+        throw new ApiError(400, "You cannot rate yourself");
+    }
+
+    const targetUser = await User.findById(targetUserId);
+    if (!targetUser) {
+        throw new ApiError(404, "The user you are trying to rate does not exist");
+    }
+
+    const existingRatingIndex = targetUser.ratings.findIndex(
+        (rating) => rating.user.toString() === raterId.toString()
+    );
+
+    if (existingRatingIndex !== -1) {
+        targetUser.ratings[existingRatingIndex].score = score;
+    } else {
+        targetUser.ratings.push({ user: raterId, score });
+    }
+
+    await targetUser.save({ validateBeforeSave: false });
+
+    
+    const totalScore = targetUser.ratings.reduce((acc, curr) => acc + curr.score, 0);
+    const averageRating = (totalScore / targetUser.ratings.length).toFixed(1);
+
+    
+    return res.status(200).json(
+        new ApiResponse(
+            200, 
+            { 
+                averageRating: Number(averageRating), 
+                totalRatings: targetUser.ratings.length 
+            }, 
+            "Rating submitted successfully"
+        )
+    );
+});
+
+const getUserProfile = asyncHandler(async (req, res) => {
+    const { targetUserId } = req.params;
+
+    const user = await User.findById(targetUserId).select("-password -refreshToken");
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    // Calculate the average rating to send to the frontend
+    let averageRating = 0;
+    if (user.ratings.length > 0) {
+        const totalScore = user.ratings.reduce((acc, curr) => acc + curr.score, 0);
+        averageRating = (totalScore / user.ratings.length).toFixed(1);
+    }
+
+    // Attach the calculated stats to the response data
+    const profileData = {
+        ...user.toObject(), // Convert Mongoose document to plain JavaScript object
+        averageRating: Number(averageRating),
+        totalRatings: user.ratings.length
+    };
+
+    return res.status(200).json(
+        new ApiResponse(200, profileData, "User profile fetched successfully")
+    );
+});
+
+
+
 export { 
     registerUser,
     loginUser,
@@ -221,5 +368,10 @@ export {
     refreshAccessToken,
     changeCurrentPassword,
     getCurrentUser,
-    updateAccountDetails
+    updateAccountDetails,
+    updateUserCoverImage,
+    updateUserAvatar,
+    updateSkillsToTeach,
+    rateUser,   
+    getUserProfile
 };

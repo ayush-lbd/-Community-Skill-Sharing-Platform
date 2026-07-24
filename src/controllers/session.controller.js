@@ -1,12 +1,12 @@
-import { Session } from "../models/Session.js"; // Ensure the path and filename match your setup
+import  Session  from "../models/Session.js"; // Ensure the path and filename match your setup
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import uploadOnCloudinary from "../utils/cloudinary.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import mongoose from "mongoose";
 
 // --- CREATE A NEW SESSION ---
-export const createSession = asyncHandler(async (req, res) => {
+const createSession = asyncHandler(async (req, res) => {
     const { title, description, category, location, date } = req.body;
 
     if (!title || !description || !category || !location || !date) {
@@ -39,7 +39,7 @@ export const createSession = asyncHandler(async (req, res) => {
 });
 
 // --- GET ALL SESSIONS (WITH PAGINATION & FILTERING) ---
-export const getAllSessions = asyncHandler(async (req, res) => {
+const getAllSessions = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query = "", category, status = "Open" } = req.query;
 
     const pipeline = [];
@@ -100,7 +100,7 @@ export const getAllSessions = asyncHandler(async (req, res) => {
 });
 
 // --- GET A SINGLE SESSION BY ID ---
-export const getSessionById = asyncHandler(async (req, res) => {
+const getSessionById = asyncHandler(async (req, res) => {
     const { sessionId } = req.params;
 
     const session = await Session.findById(sessionId)
@@ -117,47 +117,37 @@ export const getSessionById = asyncHandler(async (req, res) => {
 });
 
 // --- UPDATE SESSION DETAILS ---
-export const updateSessionDetails = asyncHandler(async (req, res) => {
-    const { sessionId } = req.params;
+
+const updateSessionDetails = asyncHandler(async (req, res) => {
     const { title, description, category, location, date, status } = req.body;
+    
+    // 1. Grab the session directly from the middleware
+    const session = req.sessionDoc; 
 
-    const session = await Session.findById(sessionId);
-
-    if (!session) {
-        throw new ApiError(404, "Session not found");
-    }
-
-    // Ensure only the host can update the session
+    // 2. Authorization check
     if (session.host.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You are not authorized to update this session");
     }
 
-    const updatedSession = await Session.findByIdAndUpdate(
-        sessionId,
-        {
-            $set: {
-                title: title || session.title,
-                description: description || session.description,
-                category: category || session.category,
-                location: location || session.location,
-                date: date || session.date,
-                status: status || session.status
-            }
-        },
-        { new: true }
-    );
+    // 3. Update the fields in memory
+    session.title = title || session.title;
+    session.description = description || session.description;
+    session.category = category || session.category;
+    session.location = location || session.location;
+    session.date = date || session.date;
+    session.status = status || session.status;
+
+    // 4. Save the document
+    await session.save({ validateBeforeSave: false });
 
     return res.status(200).json(
-        new ApiResponse(200, updatedSession, "Session updated successfully")
+        new ApiResponse(200, session, "Session updated successfully")
     );
 });
 
 // --- UPDATE SESSION THUMBNAIL ---
-export const updateSessionThumbnail = asyncHandler(async (req, res) => {
-    const { sessionId } = req.params;
-
-    const session = await Session.findById(sessionId);
-    if (!session) throw new ApiError(404, "Session not found");
+const updateSessionThumbnail = asyncHandler(async (req, res) => {
+    const session = req.sessionDoc; // From middleware
 
     if (session.host.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You are not authorized to update this thumbnail");
@@ -182,19 +172,15 @@ export const updateSessionThumbnail = asyncHandler(async (req, res) => {
 });
 
 // --- DELETE SESSION ---
-export const deleteSession = asyncHandler(async (req, res) => {
-    const { sessionId } = req.params;
-
-    const session = await Session.findById(sessionId);
-    if (!session) {
-        throw new ApiError(404, "Session not found");
-    }
+const deleteSession = asyncHandler(async (req, res) => {
+    const session = req.sessionDoc; // From middleware
 
     if (session.host.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You are not authorized to delete this session");
     }
 
-    await Session.findByIdAndDelete(sessionId);
+    // Since we already have the ID, we execute the delete
+    await Session.findByIdAndDelete(session._id);
 
     return res.status(200).json(
         new ApiResponse(200, {}, "Session deleted successfully")
@@ -202,13 +188,9 @@ export const deleteSession = asyncHandler(async (req, res) => {
 });
 
 // --- JOIN A SESSION ---
-export const joinSession = asyncHandler(async (req, res) => {
-    const { sessionId } = req.params;
+const joinSession = asyncHandler(async (req, res) => {
     const userId = req.user._id;
-
-    const session = await Session.findById(sessionId);
-
-    if (!session) throw new ApiError(404, "Session not found");
+    const session = req.sessionDoc; // From middleware
 
     if (session.status !== "Open") {
         throw new ApiError(400, `Cannot join. Session is currently marked as ${session.status}`);
@@ -231,13 +213,9 @@ export const joinSession = asyncHandler(async (req, res) => {
 });
 
 // --- LEAVE A SESSION ---
-export const leaveSession = asyncHandler(async (req, res) => {
-    const { sessionId } = req.params;
+const leaveSession = asyncHandler(async (req, res) => {
     const userId = req.user._id;
-
-    const session = await Session.findById(sessionId);
-
-    if (!session) throw new ApiError(404, "Session not found");
+    const session = req.sessionDoc; // From middleware
 
     if (!session.attendees.includes(userId)) {
         throw new ApiError(400, "You are not an attendee of this session");

@@ -1,4 +1,4 @@
-import { Session } from "../models/Session.js";
+import { Session } from "../models/session.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 

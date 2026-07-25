@@ -1,1 +1,1 @@
-export const DB_NAME="Skill Sharing Platform"
+export const DB_NAME="Skill_Sharing_Platform"

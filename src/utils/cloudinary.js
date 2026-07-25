@@ -1,6 +1,11 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs"; 
 
+// console.log("TESTING ENV VARIABLES: ", {
+//     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+//     api_key: process.env.CLOUDINARY_API_KEY,
+//     api_secret: process.env.CLOUDINARY_API_SECRET
+// });
 
 cloudinary.config({ 
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
@@ -27,7 +32,7 @@ const uploadOnCloudinary = async (localFilePath) => {
         return response; 
 
     } catch (error) {
-        
+        console.error("CLOUDINARY UPLOAD ERROR:", error);
         if (fs.existsSync(localFilePath)) {
             fs.unlinkSync(localFilePath);
         }

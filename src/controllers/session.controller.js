@@ -1,4 +1,4 @@
-import  Session  from "../models/Session.js"; // Ensure the path and filename match your setup
+import { Session } from "../models/session.model.js"; // Ensure the path and filename match your setup
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -7,10 +7,18 @@ import mongoose from "mongoose";
 
 // --- CREATE A NEW SESSION ---
 const createSession = asyncHandler(async (req, res) => {
-    const { title, description, category, location, date } = req.body;
+    const { title, description, category, sessionLocation, meetingUrl, physicalLocation, date } = req.body;
 
-    if (!title || !description || !category || !location || !date) {
-        throw new ApiError(400, "All fields (title, description, category, location, date) are required");
+    if (!title || !description || !category || !sessionLocation || !date) {
+        throw new ApiError(400, "All fields (title, description, category, sessionLocation, date) are required");
+    }
+    
+    if (sessionLocation === "online" && !meetingUrl) {
+        throw new ApiError(400, "Meeting URL is required for online sessions");
+    }
+    
+    if (sessionLocation === "in-person" && !physicalLocation) {
+        throw new ApiError(400, "A physical address is required for in-person sessions");
     }
 
     const thumbnailLocalPath = req.file?.path;
@@ -27,7 +35,9 @@ const createSession = asyncHandler(async (req, res) => {
         title,
         description,
         category,
-        location,
+        sessionLocation,
+        meetingUrl: sessionLocation === "online" ? meetingUrl : undefined,
+        physicalLocation: sessionLocation === "in-person" ? physicalLocation : undefined,
         date,
         thumbnail: thumbnail.url,
         host: req.user._id // Attached from verifyJWT middleware
@@ -119,7 +129,7 @@ const getSessionById = asyncHandler(async (req, res) => {
 // --- UPDATE SESSION DETAILS ---
 
 const updateSessionDetails = asyncHandler(async (req, res) => {
-    const { title, description, category, location, date, status } = req.body;
+    const { title, description, category, sessionLocation, meetingUrl, physicalLocation, date, status } = req.body;
     
     // 1. Grab the session directly from the middleware
     const session = req.sessionDoc; 
@@ -133,7 +143,30 @@ const updateSessionDetails = asyncHandler(async (req, res) => {
     session.title = title || session.title;
     session.description = description || session.description;
     session.category = category || session.category;
-    session.location = location || session.location;
+    if (sessionLocation) {
+        if (sessionLocation === "online" && !meetingUrl && session.sessionLocation !== "online") {
+             throw new ApiError(400, "Meeting URL is required when switching to an online session");
+        }
+        // 2. Prevent switching to in-person without an address
+        if (sessionLocation === "in-person" && !physicalLocation && session.sessionLocation !== "in-person") {
+             throw new ApiError(400, "A physical address is required when switching to an in-person session");
+        }
+        
+        session.sessionLocation = sessionLocation;
+        
+        // 3. Wipe the unused field depending on what they switched to
+        if (sessionLocation === "in-person") {
+            session.meetingUrl = undefined;
+            session.physicalLocation = physicalLocation || session.physicalLocation;
+        } else if (sessionLocation === "online") {
+            session.physicalLocation = undefined;
+            session.meetingUrl = meetingUrl || session.meetingUrl;
+        }
+    } else {
+        // Allow updating just the URL or Address without changing the type
+        if (meetingUrl && session.sessionLocation === "online") session.meetingUrl = meetingUrl;
+        if (physicalLocation && session.sessionLocation === "in-person") session.physicalLocation = physicalLocation;
+    }
     session.date = date || session.date;
     session.status = status || session.status;
 

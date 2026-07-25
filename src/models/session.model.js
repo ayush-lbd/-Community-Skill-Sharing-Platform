@@ -21,9 +21,30 @@ const sessionSchema = new mongoose.Schema(
             type: String, //from clouidinary
             required: [true, "Thumbnail URL is required"] 
         },
-        location: { 
-            type: String, 
-            required: [true, "Location or meeting link is required"] 
+        sessionLocation: {
+        type: String,
+        enum: ["online", "in-person"],
+        required: true
+        },
+        meetingUrl: {
+            type: String,
+            trim: true,
+            // 1. First, Mongoose checks if it's required based on the location
+            required: function() { 
+                return this.sessionLocation === 'online'; 
+            },
+            // 2. Then, IF a link is provided, it must match this rule
+            match: [
+                /^https?:\/\/.+/, 
+                "Please provide a valid meeting link starting with http:// or https://"
+            ]
+        },
+        physicalLocation: {
+            type: String,
+            trim: true,
+            required: function() {
+                return this.sessionLocation === 'in-person';
+            }
         },
         status: { 
             type: String, 

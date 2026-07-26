@@ -1,5 +1,7 @@
 {
   "name": "frontend",
+  "description": "Frontend UI for the community skill-sharing platform",
+  "author": "Ayush Pandey",
   "private": true,
   "version": "0.0.0",
   "type": "module",

@@ -119,6 +119,7 @@ export default function Dashboard() {
                   <option value="Design">Design</option>
                   <option value="Languages">Languages</option>
                   <option value="Electronics">Electronics</option>
+                  <option value="Other">Other</option>
                 </select>
                 <input
                   type="text"

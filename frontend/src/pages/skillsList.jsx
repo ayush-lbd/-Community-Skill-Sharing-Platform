@@ -59,7 +59,8 @@ export default function SkillsList() {
             <option value="Development">Development</option>
             <option value="Design">Design</option>
             <option value="Languages">Languages</option>
-            <option value="Electronics">Electronics & Hardware</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Other">Other</option>
           </select>
         </div>
       </div>

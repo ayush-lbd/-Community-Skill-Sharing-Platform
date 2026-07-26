@@ -15,7 +15,7 @@ const sessionSchema = new mongoose.Schema(
         category: { 
             type: String, 
             required: [true, "Category is required"],
-            enum: ['Technology', 'Language', 'Arts', 'Music', 'Fitness', 'Other'] // Predefined tags
+            enum: ['Development', 'Design', 'Languages', 'Electronics', 'Other'] // Predefined tags
         },
         thumbnail: { 
             type: String, //from clouidinary

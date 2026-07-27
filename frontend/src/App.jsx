@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
+import PublicProfile from './components/PublicProfile';
 
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -41,6 +42,8 @@ export default function App() {
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              {/* Platform-Public: Only registered users can view and rate others */}
+              <Route path="/user/:id" element={<PublicProfile />} />
             </Route>
           </Routes>
         </main>

@@ -2,13 +2,19 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import API from '../api/axios';
 import { Plus, BookOpen } from 'lucide-react';
+import EditProfileModal from '../components/EditProfileModal';
+import ChangePasswordModal from '../components/ChangePasswordModal';
+import { Settings, Lock } from 'lucide-react';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [mySkills, setMySkills] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [formData, setFormData] = useState({ title: '', description: '', category: 'Development', duration: '' });
   const [image, setImage] = useState(null);
+  
 
   useEffect(() => {
     const fetchUserSkills = async () => {
@@ -63,7 +69,7 @@ export default function Dashboard() {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-r from-indigo-500 to-purple-600"></div>
+            <div className="w-full h-full bg-linear-to-r from-indigo-500 to-purple-600"></div>
           )}
         </div>
 
@@ -82,6 +88,24 @@ export default function Dashboard() {
                   {user.name?.charAt(0).toUpperCase()}
                 </div>
               )}
+            </div>
+            
+            <div className="flex gap-3 mb-4">
+              {/* Change Password Button */}
+              <button 
+                onClick={() => setShowPasswordModal(true)}
+                className="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2 bg-white shadow-sm"
+              >
+                <Lock className="w-4 h-4" /> Password
+              </button>
+
+              {/* Edit Profile Button */}
+              <button 
+                onClick={() => setShowEditProfile(true)}
+                className="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2 bg-white shadow-sm"
+              >
+                <Settings className="w-4 h-4" /> Edit Profile
+              </button>
             </div>
           </div>
 
@@ -234,6 +258,26 @@ export default function Dashboard() {
             </form>
           </div>
         </div>
+      )}
+
+      {/*  Edit Profile Modal */}
+      {showEditProfile && (
+        <EditProfileModal 
+          user={user} 
+          onClose={() => setShowEditProfile(false)} 
+          onUpdateSuccess={() => {
+            setShowEditProfile(false);
+            // Force a hard refresh to immediately show new images/data
+            window.location.reload(); 
+          }}
+        />
+      )}
+
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <ChangePasswordModal 
+          onClose={() => setShowPasswordModal(false)} 
+        />
       )}
     </div>
   );

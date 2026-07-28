@@ -50,13 +50,27 @@ const createSession = asyncHandler(async (req, res) => {
 
 // --- GET ALL SESSIONS (WITH PAGINATION & FILTERING) ---
 const getAllSessions = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10, query = "", category, status = "Open" } = req.query;
+    const { page = 1, limit = 10, query = "", category, status = "Open",hostId } = req.query;
 
     const pipeline = [];
 
     // 1. Match based on status (Default is 'Open')
-    const matchConditions = { status };
+    const matchConditions = {};
+    
+    
+    if (hostId) {
+        matchConditions.host = new mongoose.Types.ObjectId(hostId);
+        // If the host specifically clicked a filter for status, apply it
+        if (status) {
+            matchConditions.status = status;
+        }
+        else {
+        // 2. Public Explore View: Strictly enforce "Open" sessions only
+        matchConditions.status = status || "Open";
+    }
+    }
 
+    
     // 2. Search by title if a query is provided
     if (query) {
         matchConditions.title = { $regex: query, $options: "i" };

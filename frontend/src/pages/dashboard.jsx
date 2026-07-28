@@ -5,6 +5,8 @@ import { Plus, BookOpen } from 'lucide-react';
 import EditProfileModal from '../components/EditProfileModal';
 import ChangePasswordModal from '../components/ChangePasswordModal';
 import { Settings, Lock } from 'lucide-react';
+import CreateSessionModal from '../components/CreateSessionModal';
+import { Calendar, Clock, MapPin, Video } from 'lucide-react';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -12,9 +14,36 @@ export default function Dashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showSessionModal, setShowSessionModal] = useState(false);
+  const [mySessions, setMySessions] = useState([]);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(true);
   const [formData, setFormData] = useState({ title: '', description: '', category: 'Development', duration: '' });
   const [image, setImage] = useState(null);
   
+  const fetchMySessions = async () => {
+    try {
+      setIsLoadingSessions(true);
+      // Adjust this route if your backend uses something specific like '/sessions/me'
+      const res = await API.get(`/sessions?hostId=${user._id}`); 
+      
+      // Look closely at this line! We must add .sessions at the end
+      const extractedSessionsArray = res.data?.data?.sessions || []; 
+      
+      // Save ONLY the array to the state
+      setMySessions(extractedSessionsArray);
+      
+    } catch (err) {
+      console.error('Failed to fetch sessions:', err);
+    } finally {
+      setIsLoadingSessions(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && user._id) {
+      fetchMySessions();
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchUserSkills = async () => {
@@ -133,6 +162,73 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+      
+    {/* My Scheduled Sessions Section */}
+        <div className="mt-12">
+        <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-slate-900">My Scheduled Sessions</h2>
+            <button 
+            onClick={() => setShowSessionModal(true)}
+            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+            + Schedule Session
+            </button>
+        </div>
+
+        {isLoadingSessions ? (
+            <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            </div>
+        ) : mySessions.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {mySessions.map((session) => (
+                <div key={session._id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col">
+                {/* Thumbnail */}
+                <div className="h-40 bg-slate-100 relative">
+                    {session.thumbnail ? (
+                    <img src={session.thumbnail} alt={session.title} className="w-full h-full object-cover" />
+                    ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-400">No Image</div>
+                    )}
+                    <span className="absolute top-3 right-3 px-2 py-1 bg-white/90 backdrop-blur-sm text-xs font-bold text-indigo-700 rounded shadow-sm uppercase tracking-wider">
+                    {session.category}
+                    </span>
+                </div>
+                
+                {/* Details */}
+                <div className="p-5 flex-1 flex flex-col">
+                    <h3 className="font-bold text-slate-900 text-lg mb-2 line-clamp-1">{session.title}</h3>
+                    
+                    <div className="space-y-2 mt-auto">
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <Calendar className="w-4 h-4 text-slate-400" />
+                        {new Date(session.date).toLocaleDateString()} at {new Date(session.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                        {session.sessionLocation === 'online' ? (
+                        <><Video className="w-4 h-4 text-slate-400" /> Online Meeting</>
+                        ) : (
+                        <><MapPin className="w-4 h-4 text-slate-400" /> In-Person</>
+                        )}
+                    </div>
+                    </div>
+                </div>
+                
+                {/* Action Footer */}
+                <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-between">
+                    <button className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Edit</button>
+                    <button className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors">Cancel Session</button>
+                </div>
+                </div>
+            ))}
+            </div>
+        ) : (
+            <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-300">
+            <p className="text-slate-500 font-medium mb-2">You haven't scheduled any sessions yet.</p>
+            </div>
+        )}
+        </div>
 
       {/* 2. User Detailed Skill Offerings Listing */}
       <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200">
@@ -146,6 +242,18 @@ export default function Dashboard() {
           >
             <Plus className="w-4 h-4" /> Add Offering
           </button>
+        </div>
+
+        <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+            My Hosted Sessions
+        </h2>
+        <button 
+            onClick={() => setShowSessionModal(true)}
+            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+        >
+            + Schedule Session
+        </button>
         </div>
 
         {mySkills.length > 0 ? (
@@ -277,6 +385,16 @@ export default function Dashboard() {
       {showPasswordModal && (
         <ChangePasswordModal 
           onClose={() => setShowPasswordModal(false)} 
+        />
+      )}
+
+      {showSessionModal && (
+        <CreateSessionModal 
+          onClose={() => setShowSessionModal(false)}
+          onSuccess={() => {
+            setShowSessionModal(false);
+            fetchMySessions(); 
+          }}
         />
       )}
     </div>

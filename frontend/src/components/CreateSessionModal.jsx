@@ -10,7 +10,9 @@ export default function CreateSessionModal({ onClose, onSuccess }) {
     sessionLocation: 'online', // Default to online
     meetingUrl: '',
     physicalLocation: '',
-    date: ''
+    date: '',
+    duration: 60, // Default duration in minutes
+    maxAttendees: 10, // Default max attendees
   });
 
   const [thumbnail, setThumbnail] = useState(null);
@@ -53,6 +55,8 @@ export default function CreateSessionModal({ onClose, onSuccess }) {
       sessionData.append('category', formData.category);
       sessionData.append('sessionLocation', formData.sessionLocation);
       sessionData.append('date', formData.date);
+      sessionData.append('duration', formData.duration);
+      sessionData.append('maxAttendees', formData.maxAttendees);
       
       // Conditionally append the correct location data
       if (formData.sessionLocation === 'online') {
@@ -148,19 +152,52 @@ export default function CreateSessionModal({ onClose, onSuccess }) {
               />
             </div>
 
-            {/* Date */}
-            <div>
-              <label className="text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-slate-400" /> Date & Time
-              </label>
-              <input
-                type="datetime-local"
-                name="date"
-                required
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                value={formData.date}
-                onChange={handleChange}
-              />
+            {/* Date, Duration, & Capacity Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-slate-400" /> Date & Time
+                </label>
+                <input
+                  type="datetime-local"
+                  name="date"
+                  required
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  value={formData.date}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Duration (Mins)
+                </label>
+                <input
+                  type="number"
+                  name="duration"
+                  min="15"
+                  step="15"
+                  required
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  value={formData.duration}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Max Attendees
+                </label>
+                <input
+                  type="number"
+                  name="maxAttendees"
+                  min="1"
+                  required
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  value={formData.maxAttendees}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
 
             <hr className="border-slate-100 my-4" />

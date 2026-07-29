@@ -11,6 +11,8 @@ export default function EditSessionModal({ session, onClose, onSuccess }) {
     meetingUrl: session?.meetingUrl || '',
     physicalLocation: session?.physicalLocation || '',
     status: session?.status || 'Open',
+    duration: session?.duration || 60,
+    maxAttendees: session?.maxAttendees || 10,
     // Format the date correctly for the datetime-local input
     date: session?.date ? new Date(session.date).toISOString().slice(0, 16) : ''
   });
@@ -20,7 +22,12 @@ export default function EditSessionModal({ session, onClose, onSuccess }) {
   const [error, setError] = useState('');
 
   const categories = ['Development', 'Design', 'Electronics', 'Languages', 'Other'];
-  const statuses = ['Open', 'Closed', 'Cancelled'];
+  const statuses = [
+    { label: 'Open (Accepting Attendees)', value: 'open' },
+    { label: 'Full', value: 'full' },
+    { label: 'Completed', value: 'completed' },
+    { label: 'Cancelled', value: 'cancelled' }
+  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,7 +62,9 @@ export default function EditSessionModal({ session, onClose, onSuccess }) {
         meetingUrl: formData.sessionLocation === 'online' ? formData.meetingUrl : "",
         physicalLocation: formData.sessionLocation === 'in-person' ? formData.physicalLocation : "",
         date: formData.date,
-        status: formData.status
+        status: formData.status,
+        duration: Number(formData.duration),
+        maxAttendees: Number(formData.maxAttendees)
       });
 
       // 2. If a new image was selected, upload it immediately after
@@ -136,6 +145,8 @@ export default function EditSessionModal({ session, onClose, onSuccess }) {
               />
             </div>
 
+            
+               {/* 5. NEW: 4-Column Grid for Date, Duration, Capacity, Status */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Date & Time</label>
@@ -148,6 +159,34 @@ export default function EditSessionModal({ session, onClose, onSuccess }) {
                     onChange={handleChange}
                   />
                 </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Duration (Minutes)</label>
+                  <input
+                    type="number"
+                    name="duration"
+                    min="15"
+                    step="15"
+                    required
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                    value={formData.duration}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Max Attendees</label>
+                  <input
+                    type="number"
+                    name="maxAttendees"
+                    min="1"
+                    required
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                    value={formData.maxAttendees}
+                    onChange={handleChange}
+                  />
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
                   <select
@@ -157,7 +196,7 @@ export default function EditSessionModal({ session, onClose, onSuccess }) {
                     onChange={handleChange}
                   >
                     {statuses.map(s => (
-                      <option key={s} value={s}>{s}</option>
+                      <option key={s.value} value={s.value}>{s.label}</option>
                     ))}
                   </select>
                 </div>

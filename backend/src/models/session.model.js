@@ -46,9 +46,19 @@ const sessionSchema = new mongoose.Schema(
                 return this.sessionLocation === 'in-person';
             }
         },
+        duration: {
+            type: Number, // Best to store it as minutes (e.g., 60, 90, 120)
+            required: true,
+            default: 60
+        },
+        maxAttendees: {
+            type: Number,
+            required: true,
+            default: 10
+        },
         status: { 
             type: String, 
-            enum: ['Open', 'Full', 'Completed'], // Session Status Toggles
+            enum: ['Open', 'Full', 'Completed', 'Cancelled'], // Session Status Toggles
             default: 'Open' 
         },
         date: { 

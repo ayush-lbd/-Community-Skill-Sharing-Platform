@@ -7,10 +7,11 @@ import mongoose from "mongoose";
 
 // --- CREATE A NEW SESSION ---
 const createSession = asyncHandler(async (req, res) => {
-    const { title, description, category, sessionLocation, meetingUrl, physicalLocation, date } = req.body;
+    const { title, description, category, sessionLocation, meetingUrl, physicalLocation, date, 
+        duration, maxAttendees } = req.body;
 
-    if (!title || !description || !category || !sessionLocation || !date) {
-        throw new ApiError(400, "All fields (title, description, category, sessionLocation, date) are required");
+    if (!title || !description || !category || !sessionLocation || !date || !duration) {
+        throw new ApiError(400, "All fields (title, description, category, sessionLocation, date ,duration) are required");
     }
     
     if (sessionLocation === "online" && !meetingUrl) {
@@ -39,6 +40,9 @@ const createSession = asyncHandler(async (req, res) => {
         meetingUrl: sessionLocation === "online" ? meetingUrl : undefined,
         physicalLocation: sessionLocation === "in-person" ? physicalLocation : undefined,
         date,
+        duration: duration || 60,         // Default to 60 mins
+        maxAttendees: maxAttendees || 10, // Default to 10 attendees
+        status: 'open',
         thumbnail: thumbnail.url,
         host: req.user._id // Attached from verifyJWT middleware
     });
@@ -74,7 +78,7 @@ const getAllSessions = asyncHandler(async (req, res) => {
     if (attendeeId) {
         matchConditions.attendees = new mongoose.Types.ObjectId(attendeeId);
     }
-    
+
     if (query) {
         matchConditions.title = { $regex: query, $options: "i" };
     }
@@ -147,7 +151,7 @@ const getSessionById = asyncHandler(async (req, res) => {
 // --- UPDATE SESSION DETAILS ---
 
 const updateSessionDetails = asyncHandler(async (req, res) => {
-    const { title, description, category, sessionLocation, meetingUrl, physicalLocation, date, status } = req.body;
+    const { title, description, category, sessionLocation, meetingUrl, physicalLocation, date,duration, maxAttendees, status } = req.body;
     
     // 1. Grab the session directly from the middleware
     const session = req.sessionDoc; 
@@ -186,6 +190,19 @@ const updateSessionDetails = asyncHandler(async (req, res) => {
         if (physicalLocation && session.sessionLocation === "in-person") session.physicalLocation = physicalLocation;
     }
     session.date = date || session.date;
+    if (duration) session.duration = duration;
+    if (maxAttendees) {
+        session.maxAttendees = maxAttendees;
+        
+        // If they lowered the capacity and it's now full/over-full:
+        if (session.attendees.length >= maxAttendees) {
+            session.status = 'full';
+        } 
+        // If it WAS full, but they just increased the capacity:
+        else if (session.status === 'full' && session.attendees.length < maxAttendees) {
+            session.status = 'open'; 
+        }
+    }
     session.status = status || session.status;
 
     // 4. Save the document
@@ -241,22 +258,30 @@ const deleteSession = asyncHandler(async (req, res) => {
 // --- JOIN A SESSION ---
 const joinSession = asyncHandler(async (req, res) => {
     const userId = req.user._id;
-    const session = req.sessionDoc; // From middleware
+    const session = await Session.findById(sessionId);
 
-    if (session.status !== "Open") {
-        throw new ApiError(400, `Cannot join. Session is currently marked as ${session.status}`);
+    if (!session) {
+        throw new ApiError(404, "Session not found");
     }
 
-    if (session.host.toString() === userId.toString()) {
-        throw new ApiError(400, "You are the host of this session");
+    if (session.status === 'full' || session.status === 'completed' || session.status === 'cancelled') {
+        throw new ApiError(400, `Cannot join. Session is currently ${session.status}.`);
     }
 
     if (session.attendees.includes(userId)) {
-        throw new ApiError(400, "You have already joined this session");
+        throw new ApiError(400, "You have already joined this session.");
+    }
+    if (session.attendees.length >= session.maxAttendees) {
+        throw new ApiError(400, "Session has reached maximum capacity.");
     }
 
     session.attendees.push(userId);
-    await session.save({ validateBeforeSave: false });
+
+    if (session.attendees.length === session.maxAttendees) {
+        session.status = 'full';
+    }
+
+    await session.save();
 
     return res.status(200).json(
         new ApiResponse(200, session, "Successfully joined the session")

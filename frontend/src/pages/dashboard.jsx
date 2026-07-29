@@ -132,9 +132,9 @@ export default function Dashboard() {
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
       
       {/* 1. Profile Banner Card */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8">
         {/* Cover Image Banner */}
-        <div className="h-48 md:h-64 w-full bg-indigo-50 relative">
+        <div className="h-40 sm:h-48 w-full bg-slate-200 relative border-b-2 border-slate-200">
           {user.coverImage ? (
             <img 
               src={user.coverImage} 
@@ -207,6 +207,8 @@ export default function Dashboard() {
         </div>
       </div>
       
+      <hr className="my-12 border-t-2 border-slate-100 rounded-full" />
+
     {/* My Scheduled Sessions Section */}
         <div className="mt-12">
         <div className="flex justify-between items-center mb-6">
@@ -287,96 +289,9 @@ export default function Dashboard() {
             </div>
         )}
         </div>
-
-     
-
-      {/* 3. Add Skill Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 md:p-8 max-w-lg w-full shadow-xl">
-            <h3 className="text-xl font-bold text-slate-900 mb-4">Offer a New Skill</h3>
-            <form onSubmit={handleCreateSkill} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Skill Title</label>
-                <input
-                  type="text"
-                  placeholder="e.g., Advanced React Patterns"
-                  required
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
-                <textarea
-                  placeholder="What will someone learn from this?"
-                  required
-                  rows="4"
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
-                  <select
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  >
-                    <option value="Development">Development</option>
-                    <option value="Design">Design</option>
-                    <option value="Languages">Languages</option>
-                    <option value="Electronics">Electronics</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Duration</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 2 hrs/wk"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                    value={formData.duration}
-                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Thumbnail (Optional)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-                  onChange={(e) => setImage(e.target.files[0])}
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
-                >
-                  Publish Offering
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
       
+      <hr className="my-12 border-t-2 border-slate-100 rounded-full" />
+
       {/* NEW SECTION: SESSIONS I AM ATTENDING           */}
       <div className="mt-16">
         <h2 className="text-2xl font-bold text-slate-900 mb-6">Sessions I'm Attending</h2>

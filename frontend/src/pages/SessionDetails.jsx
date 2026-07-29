@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import API from '../api/axios';
-import { Calendar, MapPin, Video, Users, ArrowLeft } from 'lucide-react';
+import { Calendar, MapPin, Video, Users, ArrowLeft, Clock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function SessionDetails() {
@@ -102,14 +102,27 @@ export default function SessionDetails() {
                 >
                   Leave Session
                 </button>
-              ) : (
+              ) : session.status === 'open' ? (
+  
+                /* --- 3. SESSION IS OPEN (Allow Join) --- */
                 <button 
-                  onClick={handleJoinSession}
-                  className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm transition-colors"
+                    onClick={handleJoinSession}
+                    className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm transition-colors"
                 >
-                  Join Session
+                    Join Session
                 </button>
-              )}
+
+                ) : (
+
+                /* --- 4. SESSION IS FULL, COMPLETED, OR CANCELLED --- */
+                <button 
+                    disabled
+                    className="px-6 py-3 bg-slate-200 text-slate-500 font-bold rounded-lg cursor-not-allowed uppercase tracking-wide"
+                >
+                    {session.status === 'full' ? 'Session Full' : `Session ${session.status}`}
+                </button>
+
+                )}
             </div>
 
           </div>
@@ -118,6 +131,19 @@ export default function SessionDetails() {
             <div className="flex flex-col gap-1">
               <span className="text-sm font-medium text-slate-500 flex items-center gap-2"><Calendar className="w-4 h-4"/> Date & Time</span>
               <span className="text-slate-900">{new Date(session.date).toLocaleString()}</span>
+            </div>
+            {/* NEW: Duration */}
+            <div className="flex items-center text-sm text-slate-600">
+                <Clock className="w-4 h-4 mr-2 text-slate-400" />
+                {session.duration} minutes
+            </div>
+
+            {/* NEW: Capacity Tracker */}
+            <div className="flex items-center text-sm font-medium">
+                <Users className="w-4 h-4 mr-2 text-slate-400" />
+                <span className={session.attendees.length >= session.maxAttendees ? "text-red-600" : "text-emerald-600"}>
+                    {session.attendees.length} / {session.maxAttendees} Spots Filled
+                </span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-sm font-medium text-slate-500 flex items-center gap-2">

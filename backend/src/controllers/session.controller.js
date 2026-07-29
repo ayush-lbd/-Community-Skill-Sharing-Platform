@@ -50,38 +50,42 @@ const createSession = asyncHandler(async (req, res) => {
 
 // --- GET ALL SESSIONS (WITH PAGINATION & FILTERING) ---
 const getAllSessions = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10, query = "", category, status = "Open",hostId } = req.query;
+    // 1. NO defaults for status here!
+    const { page = 1, limit = 10, query = "", category, status, hostId ,attendeeId } = req.query;
 
     const pipeline = [];
-
-    // 1. Match based on status (Default is 'Open')
+    
+    // 2. Start completely empty!
     const matchConditions = {};
-    
-    
+
+    // 3. Smart Logic
     if (hostId) {
         matchConditions.host = new mongoose.Types.ObjectId(hostId);
-        // If the host specifically clicked a filter for status, apply it
+        
+        // Only add status if the frontend actually sent one
         if (status) {
             matchConditions.status = status;
         }
-        else {
-        // 2. Public Explore View: Strictly enforce "Open" sessions only
+    } else {
+        // Public explore page logic
         matchConditions.status = status || "Open";
     }
-    }
-
     
-    // 2. Search by title if a query is provided
+    if (attendeeId) {
+        matchConditions.attendees = new mongoose.Types.ObjectId(attendeeId);
+    }
+    
     if (query) {
         matchConditions.title = { $regex: query, $options: "i" };
     }
-
-    // 3. Filter by category if provided
+    
     if (category) {
         matchConditions.category = category;
     }
 
     pipeline.push({ $match: matchConditions });
+    
+    // ... the rest of your pipeline (lookup, unwind, sort, aggregatePaginate) ...
 
     // 4. Populate host details using lookup
     pipeline.push({

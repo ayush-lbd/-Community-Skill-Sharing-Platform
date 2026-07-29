@@ -7,6 +7,7 @@ import ChangePasswordModal from '../components/ChangePasswordModal';
 import { Settings, Lock } from 'lucide-react';
 import CreateSessionModal from '../components/CreateSessionModal';
 import { Calendar, Clock, MapPin, Video } from 'lucide-react';
+import EditSessionModal from '../components/EditSessionModal';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -15,11 +16,43 @@ export default function Dashboard() {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showSessionModal, setShowSessionModal] = useState(false);
+  const [editingSession, setEditingSession] = useState(null);
   const [mySessions, setMySessions] = useState([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
   const [formData, setFormData] = useState({ title: '', description: '', category: 'Development', duration: '' });
   const [image, setImage] = useState(null);
+  const [joinedSessions, setJoinedSessions] = useState([]);
+  const [isLoadingJoined, setIsLoadingJoined] = useState(true);
   
+  const handleDeleteSession = async (sessionId) => {
+    // Show a browser confirmation popup before deleting
+    if (!window.confirm("Are you sure you want to delete this session? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      // Ensure this route matches your Express delete controller route
+      await API.delete(`/sessions/${sessionId}`);
+      fetchMySessions(); // Refresh the grid instantly
+    } catch (err) {
+      console.error("Failed to delete session:", err);
+      alert("Failed to delete the session. Please try again.");
+    }
+  };
+  
+  const fetchJoinedSessions = async () => {
+    try {
+      setIsLoadingJoined(true);
+      // Fetch using the new backend filter we just added
+      const res = await API.get(`/sessions?attendeeId=${user._id}`);
+      setJoinedSessions(res.data?.data?.sessions || []);
+    } catch (err) {
+      console.error('Failed to fetch joined sessions:', err);
+    } finally {
+      setIsLoadingJoined(false);
+    }
+  };
+
   const fetchMySessions = async () => {
     try {
       setIsLoadingSessions(true);
@@ -38,10 +71,21 @@ export default function Dashboard() {
       setIsLoadingSessions(false);
     }
   };
+  
+  const handleLeaveDashboardSession = async (sessionId) => {
+    if (!window.confirm("Are you sure you want to leave this session?")) return;
+    try {
+      await API.post(`/sessions/${sessionId}/leave`); 
+      fetchJoinedSessions(); // Refresh the grid instantly without reloading the page
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to leave session.");
+    }
+  };
 
   useEffect(() => {
     if (user && user._id) {
       fetchMySessions();
+      fetchJoinedSessions();
     }
   }, [user]);
 
@@ -216,9 +260,23 @@ export default function Dashboard() {
                 </div>
                 
                 {/* Action Footer */}
+                {/* Edit Session Modal */}
                 <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-between">
-                    <button className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Edit</button>
-                    <button className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors">Cancel Session</button>
+                    <button 
+                    onClick={() => {
+                        console.log("Edit button clicked! Session data:", session); // ADD THIS
+                        setEditingSession(session);
+                    }}
+                    className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
+                    >
+                    Edit
+                    </button>
+                    <button 
+                    onClick={() => handleDeleteSession(session._id)} 
+                    className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
+                    >
+                    Delete
+                    </button>
                 </div>
                 </div>
             ))}
@@ -367,7 +425,54 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+      
+      {/* NEW SECTION: SESSIONS I AM ATTENDING           */}
+      <div className="mt-16">
+        <h2 className="text-2xl font-bold text-slate-900 mb-6">Sessions I'm Attending</h2>
+        
+        {isLoadingJoined ? (
+          <p>Loading...</p>
+        ) : joinedSessions.length === 0 ? (
+          <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-300 text-slate-500">
+            You haven't joined any sessions yet.
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {joinedSessions.map((session) => (
+              <div key={session._id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col">
+                
+                {/* Thumbnail */}
+                <div className="h-32 bg-slate-100 relative cursor-pointer">
+                  {session.thumbnail ? (
+                    <img src={session.thumbnail} alt={session.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-400">No Image</div>
+                  )}
+                </div>
+                
+                {/* Details */}
+                <div className="p-5 flex-1 flex flex-col">
+                  <h3 className="font-bold text-slate-900 text-lg">{session.title}</h3>
+                  <div className="text-sm text-slate-600 mt-2">
+                    {new Date(session.date).toLocaleDateString()}
+                  </div>
+                </div>
+                
+                {/* Leave Button Footer */}
+                <div className="p-4 bg-slate-50 border-t border-slate-100">
+                  <button 
+                    onClick={() => handleLeaveDashboardSession(session._id)}
+                    className="w-full py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                  >
+                    Leave Session
+                  </button>
+                </div>
 
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
       {/*  Edit Profile Modal */}
       {showEditProfile && (
         <EditProfileModal 
@@ -397,6 +502,19 @@ export default function Dashboard() {
           }}
         />
       )}
+
+      {/* Edit Session Modal */}
+      {editingSession && (
+        <EditSessionModal 
+          session={editingSession}
+          onClose={() => setEditingSession(null)}
+          onSuccess={() => {
+            setEditingSession(null);
+            fetchMySessions(); // Refreshes the grid with updated info
+          }}
+        />
+      )}
+
     </div>
   );
 }

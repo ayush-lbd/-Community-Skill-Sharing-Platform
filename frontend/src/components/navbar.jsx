@@ -27,7 +27,14 @@ const Navbar = () => {
             <Link to="/skills" className="text-slate-600 hover:text-indigo-600 font-medium">
               Explore Skills
             </Link>
+            
 
+            <Link 
+            to="/sessions" 
+            className="text-slate-600 hover:text-indigo-600 font-medium transition-colors"
+            >
+            Explore Sessions
+            </Link>
             {/* Conditional Auth Rendering */}
             {user ? (
               <div className="flex items-center gap-4">

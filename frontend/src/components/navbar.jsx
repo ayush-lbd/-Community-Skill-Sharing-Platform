@@ -24,11 +24,7 @@ const Navbar = () => {
 
           {/* Desktop Navigation - TODO: Add a hamburger menu for mobile screens later */}
           <div className="hidden md:flex items-center gap-6">
-            <Link to="/skills" className="text-slate-600 hover:text-indigo-600 font-medium">
-              Explore Skills
-            </Link>
             
-
             <Link 
             to="/sessions" 
             className="text-slate-600 hover:text-indigo-600 font-medium transition-colors"

@@ -4,14 +4,12 @@ import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
-import PublicProfile from './components/PublicProfile';
+import PublicProfile from './pages/PublicProfile';
 import ExploreSessions from './pages/ExploreSessions'; 
 import SessionDetails from './pages/SessionDetails';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import SkillsList from './pages/SkillsList';
-import SkillDetail from './pages/SkillDetail';
 import Dashboard from './pages/Dashboard';
 
 export default function App() {
@@ -37,9 +35,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/skills" element={<SkillsList />} />
-            <Route path="/skills/:id" element={<SkillDetail />} />
-          
+            <Route path="/profile/:targetUserId" element={<PublicProfile />} />
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />

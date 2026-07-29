@@ -5,6 +5,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { Session } from "../models/session.model.js";
 
 const cookieOptions = {
     httpOnly: true,
@@ -346,12 +347,14 @@ const getUserProfile = asyncHandler(async (req, res) => {
         const totalScore = user.ratings.reduce((acc, curr) => acc + curr.score, 0);
         averageRating = (totalScore / user.ratings.length).toFixed(1);
     }
-
+    
+    const hostedSessions = await Session.find({ host: targetUserId }).sort({ createdAt: -1 });
     // Attach the calculated stats to the response data
     const profileData = {
         ...user.toObject(), // Convert Mongoose document to plain JavaScript object
         averageRating: Number(averageRating),
-        totalRatings: user.ratings.length
+        totalRatings: user.ratings.length,
+        hostedSessions: hostedSessions
     };
 
     return res.status(200).json(

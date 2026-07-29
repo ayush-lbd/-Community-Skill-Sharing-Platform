@@ -15,7 +15,7 @@ export default function Home() {
         </p>
         <div className="flex justify-center gap-4">
           <Link
-            to="/skills"
+            to="/sessions"
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg flex items-center gap-2 transition"
           >
             Explore Skills <ArrowRight className="w-4 h-4" />

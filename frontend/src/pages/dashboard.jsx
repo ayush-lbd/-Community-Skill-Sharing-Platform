@@ -288,56 +288,7 @@ export default function Dashboard() {
         )}
         </div>
 
-      {/* 2. User Detailed Skill Offerings Listing */}
-      <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <BookOpen className="w-6 h-6 text-indigo-600" /> My Active Offerings
-          </h2>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors shrink-0"
-          >
-            <Plus className="w-4 h-4" /> Add Offering
-          </button>
-        </div>
-
-        <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            My Hosted Sessions
-        </h2>
-        <button 
-            onClick={() => setShowSessionModal(true)}
-            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-        >
-            + Schedule Session
-        </button>
-        </div>
-
-        {mySkills.length > 0 ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mySkills.map((skill) => (
-              <div key={skill._id} className="bg-slate-50 p-5 rounded-xl border border-slate-200 hover:shadow-md transition-shadow">
-                <span className="inline-block px-2 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-bold uppercase tracking-wider rounded-md mb-2">
-                  {skill.category}
-                </span>
-                <h3 className="font-bold text-slate-900 text-lg leading-tight">{skill.title}</h3>
-                <p className="text-sm text-slate-600 line-clamp-3 mt-2">{skill.description}</p>
-                {skill.duration && (
-                  <p className="text-xs font-medium text-slate-500 mt-4 flex items-center gap-1">
-                    ⏱️ {skill.duration}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-slate-50 p-10 text-center rounded-xl border border-dashed border-slate-300">
-            <p className="text-slate-500 font-medium">You have not listed any detailed offerings yet.</p>
-            <p className="text-slate-400 text-sm mt-1">Click "Add Offering" to post your first structured skill.</p>
-          </div>
-        )}
-      </div>
+     
 
       {/* 3. Add Skill Modal */}
       {showAddModal && (
@@ -459,13 +410,32 @@ export default function Dashboard() {
                 </div>
                 
                 {/* Leave Button Footer */}
-                <div className="p-4 bg-slate-50 border-t border-slate-100">
+                <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
+                  
+                  {/* Primary Action: Join Meeting / In-Person Tag */}
+                  {session.sessionLocation === 'online' && session.meetingUrl ? (
+                    <a 
+                      href={session.meetingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 inline-flex justify-center items-center px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all shadow-sm"
+                    >
+                      <Video className="w-4 h-4 mr-2" /> Join Meeting
+                    </a>
+                  ) : (
+                    <div className="flex-1 inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-slate-700 bg-slate-200/70 border border-slate-300 rounded-lg">
+                      <MapPin className="w-4 h-4 mr-2" /> In-Person Event
+                    </div>
+                  )}
+
+                  {/* Secondary Action: Leave Session */}
                   <button 
                     onClick={() => handleLeaveDashboardSession(session._id)}
-                    className="w-full py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                    className="inline-flex justify-center items-center px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 border border-red-100 rounded-lg hover:bg-red-100 hover:text-red-700 transition-all shrink-0"
                   >
-                    Leave Session
+                    Leave
                   </button>
+                  
                 </div>
 
               </div>

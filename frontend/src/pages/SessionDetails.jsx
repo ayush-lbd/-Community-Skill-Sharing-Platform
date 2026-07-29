@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import API from '../api/axios';
 import { Calendar, MapPin, Video, Users, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -48,6 +48,10 @@ export default function SessionDetails() {
   if (isLoading) return <div className="text-center py-12">Loading details...</div>;
   if (!session) return <div className="text-center py-12">Session not found.</div>;
 
+  const isHost = session?.host === user?._id || session?.host?._id === user?._id;
+  const isAttendee = session?.attendees?.some(a => a === user?._id || a._id === user?._id);
+  const canViewSecretDetails = isHost || isAttendee;
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <button 
@@ -75,7 +79,13 @@ export default function SessionDetails() {
               </span>
               <h1 className="text-3xl font-bold text-slate-900 mt-4">{session.title}</h1>
               <p className="text-slate-500 mt-2 flex items-center gap-2">
-                Hosted by <span className="font-medium text-slate-900">{session.host?.name}</span>
+                Hosted by 
+                <Link 
+                  to={`/profile/${session.host?._id}`} // This naturally becomes the targetUserId in the URL!
+                  className="font-bold text-indigo-600 hover:text-indigo-800 hover:underline transition-colors"
+                >
+                  {session.host?.name}
+                </Link>
               </p>
             </div>
             
@@ -120,6 +130,61 @@ export default function SessionDetails() {
               <span className="text-sm font-medium text-slate-500 flex items-center gap-2"><Users className="w-4 h-4"/> Attendees</span>
               <span className="text-slate-900">{session.attendees?.length || 0} Joined</span>
             </div>
+          </div>
+          
+          <div className="mb-8 p-6 bg-indigo-50 border border-indigo-100 rounded-xl">
+            
+            {session.sessionLocation === 'online' ? (
+              
+              /* --- ONLINE SESSIONS (Requires Joining to see Link) --- */
+              <>
+                <h3 className="text-lg font-bold text-indigo-900 mb-2">Meeting Link</h3>
+                {canViewSecretDetails ? (
+                  <div className="flex flex-col gap-3">
+                    <a 
+                      href={session.meetingUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-indigo-600 font-medium hover:underline flex items-center gap-2 w-fit"
+                    >
+                      <Video className="w-5 h-5" /> Click here to join the meeting
+                    </a>
+                    
+                    {/* Selectable raw URL text box */}
+                    <div className="p-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 break-all select-all font-mono">
+                      {session.meetingUrl || "Link not provided"}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-white/60 border border-indigo-100 rounded-lg text-sm text-indigo-800 flex items-center gap-2">
+                    <Video className="w-4 h-4" />
+                    Join this session to unlock the meeting link.
+                  </div>
+                )}
+              </>
+
+            ) : (
+
+              /* --- IN-PERSON SESSIONS (Visible to Everyone) --- */
+              <>
+                <h3 className="text-lg font-bold text-indigo-900 mb-2">Exact Location</h3>
+                <p className="text-indigo-800 flex items-start gap-2">
+                  <MapPin className="w-5 h-5 mt-0.5 shrink-0" /> 
+                  
+                  {/* UPDATED: Using physicalLocation to match your schema */}
+                  <span className="font-medium text-slate-800">
+                    {session.physicalLocation || "Location pending or not provided."}
+                  </span>
+                </p>
+                {!canViewSecretDetails && (
+                  <p className="text-sm text-indigo-600 mt-3 italic">
+                    Review the location above before joining to ensure you can attend!
+                  </p>
+                )}
+              </>
+              
+            )}
+            
           </div>
 
           <div>

@@ -258,6 +258,8 @@ const deleteSession = asyncHandler(async (req, res) => {
 // --- JOIN A SESSION ---
 const joinSession = asyncHandler(async (req, res) => {
     const userId = req.user._id;
+    const { sessionId } = req.params; 
+    
     const session = await Session.findById(sessionId);
 
     if (!session) {

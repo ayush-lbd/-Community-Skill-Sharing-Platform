@@ -7,7 +7,8 @@ const app=express()
 app.use(cors({
     origin: [
     process.env.CORS_ORIGIN, // Your local Vite frontend URL (change port if yours is different)
-    'https://community-skill-sharing-platform.vercel.app' // Your live Vercel frontend URL
+    'https://community-skill-sharing-platform.vercel.app',
+    'https://community-skill-sharing-platform-qrr2wxea4-ayush-be74.vercel.app' // Your live Vercel frontend URL
   ],
   credentials: true, // This is required because you are using withCredentials in Axios
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

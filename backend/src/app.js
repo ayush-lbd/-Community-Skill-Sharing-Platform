@@ -5,14 +5,22 @@ import cookieParser from "cookie-parser"
 
 const app=express()
 app.use(cors({
-    origin: [
-    process.env.CORS_ORIGIN, // Your local Vite frontend URL (change port if yours is different)
-    'https://community-skill-sharing-platform.vercel.app',
-    'https://community-skill-sharing-platform-qrr2wxea4-ayush-be74.vercel.app' // Your live Vercel frontend URL
-  ],
-  credentials: true, // This is required because you are using withCredentials in Axios
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-}))
+  origin: function (origin, callback) {
+    // This allows any Vercel origin to connect to your backend
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'https://community-skill-sharing-platform.vercel.app',
+      'https://community-skill-sharing-platform-bj49hscuv-ayush-be74.vercel.app/'
+    ];
+    // Allow if it's in the list, OR if it's a Vercel preview link, OR if there's no origin (like Postman)
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true // This is mandatory because your frontend uses withCredentials
+}));
 
 app.use(express.json({limit: "16kb"}))
 app.use(express.urlencoded({extended: true, limit: "16kb"}))

@@ -81,7 +81,7 @@ export default function Dashboard() {
       alert(err.response?.data?.message || "Failed to leave session.");
     }
   };
-
+  console.log("Current User Object:", user);
   useEffect(() => {
     if (user && user._id) {
       fetchMySessions();

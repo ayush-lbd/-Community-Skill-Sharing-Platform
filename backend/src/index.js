@@ -21,3 +21,7 @@ connectDB()
 .catch((error) => {
     console.log("Error connecting to MongoDB: ", error);
 })
+// Add this to your main server file
+app.get('/', (req, res) => {
+    res.send('Community Skill Sharing API is running perfectly!');
+});

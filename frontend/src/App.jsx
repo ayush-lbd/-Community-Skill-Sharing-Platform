@@ -1,16 +1,16 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { AuthProvider } from './context/AuthContext';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import ProtectedRoute from './components/ProtectedRoute';
+import Navbar from './components/navbar';
+import Footer from './components/footer';
+import ProtectedRoute from './components/protectedRoute';
 import PublicProfile from './pages/PublicProfile';
 import ExploreSessions from './pages/ExploreSessions'; 
 import SessionDetails from './pages/SessionDetails';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
+import Home from './pages/home';
+import Login from './pages/login';
+import Register from './pages/register';
+import Dashboard from './pages/dashboard';
 
 export default function App() {
   

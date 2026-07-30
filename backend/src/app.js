@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser"
 
 
 const app=express()
+app.set('trust proxy', 1);
 app.use(cors({
   origin: function (origin, callback) {
     // This allows any Vercel origin to connect to your backend

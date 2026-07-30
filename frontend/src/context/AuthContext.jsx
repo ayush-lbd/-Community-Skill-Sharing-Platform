@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
         
         // Restore the user state with the data from your database
         // Adjust this based on how your backend formats the response (e.g., response.data.data)
-        setUser(response.data.data || response.data.user || response.data);
+        setUser(response.data?.data?.user || response.data?.data || response.data);
       } catch (error) {
         console.log('No active session or token expired.');
         setUser(null);
@@ -33,7 +33,8 @@ export const AuthProvider = ({ children }) => {
     const response = await API.post('/users/login', credentials);
     // The backend sets the cookie automatically. We just need to save the user data.
     console.log("Backend Login Response:", response.data);
-    setUser(response.data.data||response.data.user || response.data);
+    const loggedInUserData = response.data?.data?.user || response.data?.data || response.data;
+    setUser(loggedInUserData);
     return response.data;
   };
 
@@ -64,7 +65,7 @@ export const AuthProvider = ({ children }) => {
       </div>
     );
   }
-  
+
   return (
     <AuthContext.Provider value={{ user, setUser, loading, login, register, logout }}>
       {children}

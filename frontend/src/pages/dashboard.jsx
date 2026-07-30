@@ -118,7 +118,7 @@ export default function Dashboard() {
   //   } catch (err) {
   //     alert(err.response?.data?.message || 'Failed to create skill offering');
   //   }
-  // };
+  // }
 
   if (!user) {
     return (

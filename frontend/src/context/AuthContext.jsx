@@ -32,6 +32,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     const response = await API.post('/users/login', credentials);
     // The backend sets the cookie automatically. We just need to save the user data.
+    console.log("Backend Login Response:", response.data);
     setUser(response.data.user || response.data);
     return response.data;
   };

@@ -6,63 +6,56 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import mongoose from "mongoose";
 
 // --- CREATE A NEW SESSION ---
-const createSession = async (req, res) => { // Removed asyncHandler temporarily
-    try {
-        const { title, description, category, sessionLocation, meetingUrl, physicalLocation, date, duration, maxAttendees } = req.body;
+const createSession = asyncHandler(async (req, res) => {
+    const { title, description, category, sessionLocation, meetingUrl, physicalLocation, date, 
+        duration, maxAttendees } = req.body;
 
-        if (!title || !description || !category || !sessionLocation || !date || !duration) {
-            return res.status(400).json({ success: false, message: "Validation Error: A required field is missing from the frontend" });
-        }
-        
-        if (sessionLocation === "online" && !meetingUrl) {
-            return res.status(400).json({ success: false, message: "Validation Error: Meeting URL is required" });
-        }
-        
-        if (sessionLocation === "in-person" && !physicalLocation) {
-            return res.status(400).json({ success: false, message: "Validation Error: Physical address is required" });
-        }
-
-        const thumbnailLocalPath = req.file?.path;
-        if (!thumbnailLocalPath) {
-            return res.status(400).json({ success: false, message: "File Error: Thumbnail image is missing" });
-        }
-
-        const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
-        if (!thumbnail?.url) {
-            return res.status(500).json({ success: false, message: "Cloudinary upload failed" });
-        }
-
-        const session = await Session.create({
-            title,
-            description,
-            category,
-            sessionLocation,
-            meetingUrl: sessionLocation === "online" ? meetingUrl : undefined,
-            physicalLocation: sessionLocation === "in-person" ? physicalLocation : undefined,
-            date,
-            duration: duration || 60,
-            maxAttendees: maxAttendees || 10,
-            status: 'Open',
-            thumbnail: thumbnail.url,
-            host: req.user._id 
-        });
-
-        return res.status(201).json({ success: true, data: session });
-
-    } catch (error) {
-        // THIS CATCHES THE 500 CRASH AND SENDS IT AS JSON
-        return res.status(500).json({
-            success: false,
-            message: "CRASH IN CREATE SESSION: " + error.message,
-            stack: error.stack
-        });
+    if (!title || !description || !category || !sessionLocation || !date || !duration) {
+        throw new ApiError(400, "All fields (title, description, category, sessionLocation, date ,duration) are required");
     }
-};
+    
+    if (sessionLocation === "online" && !meetingUrl) {
+        throw new ApiError(400, "Meeting URL is required for online sessions");
+    }
+    
+    if (sessionLocation === "in-person" && !physicalLocation) {
+        throw new ApiError(400, "A physical address is required for in-person sessions");
+    }
+
+    const thumbnailLocalPath = req.file?.path;
+    if (!thumbnailLocalPath) {
+        throw new ApiError(400, "Thumbnail image is required");
+    }
+
+    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+    if (!thumbnail?.url) {
+        throw new ApiError(500, "Failed to upload thumbnail");
+    }
+
+    const session = await Session.create({
+        title,
+        description,
+        category,
+        sessionLocation,
+        meetingUrl: sessionLocation === "online" ? meetingUrl : undefined,
+        physicalLocation: sessionLocation === "in-person" ? physicalLocation : undefined,
+        date,
+        duration: duration || 60,
+        maxAttendees: maxAttendees || 10,
+        status: 'Open', 
+        thumbnail: thumbnail.url,
+        host: req.user._id 
+    });
+
+    return res.status(201).json(
+        new ApiResponse(201, session, "Session created successfully")
+    );
+});
 
 // --- GET ALL SESSIONS (WITH PAGINATION & FILTERING) ---
 const getAllSessions = asyncHandler(async (req, res) => {
     // 1. NO defaults for status here!
-    const { page = 1, limit = 10, query = "", category, status, hostId ,attendeeId } = req.query;
+    const { page = 1, limit = 2, query = "", category, status, hostId ,attendeeId } = req.query;
 
     const pipeline = [];
     

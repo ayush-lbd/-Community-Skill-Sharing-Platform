@@ -8,17 +8,22 @@ export default function ExploreSessions() {
   const [sessions, setSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchInput, setSearchInput] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const navigate = useNavigate();
 
   const { user } = useAuth();
 
-  const fetchAllSessions = async (searchQuery = "") => {
+  const fetchAllSessions = async (searchQuery = "", currentPage = 1) => {
     try {
       setIsLoading(true);
-      // We attach the query string dynamically!
-      const res = await API.get(`/sessions?query=${searchQuery}`);
+      
+      const res = await API.get(`/sessions?query=${searchQuery}&page=${currentPage}`);
+      
       setSessions(res.data?.data?.sessions || []);
+      
+      setTotalPages(res.data?.data?.totalPages || 1); 
     } catch (err) {
       console.error('Failed to fetch explore sessions:', err);
     } finally {
@@ -26,14 +31,15 @@ export default function ExploreSessions() {
     }
   };
 
-  // 3. INITIAL LOAD (Runs once when page loads)
+  
   useEffect(() => {
-    fetchAllSessions();
-  }, []);
+    fetchAllSessions(searchInput, page);
+  }, [page]);
 
   const handleSearchSubmit = (e) => {
-    e.preventDefault(); // Prevents page reload
-    fetchAllSessions(searchInput); // Calls the backend with the typed text
+    e.preventDefault(); 
+    setPage(1);
+    fetchAllSessions(searchInput,1); // Calls the backend with the typed text
   };
 
   const handleJoinSession = async (sessionId) => {
@@ -169,6 +175,31 @@ export default function ExploreSessions() {
           </div>
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4 mt-12 mb-8">
+          <button
+            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+            disabled={page === 1}
+            className="px-6 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium shadow-sm"
+          >
+            Previous
+          </button>
+
+          <span className="text-slate-600 font-medium">
+            Page {page} of {totalPages}
+          </span>
+
+          <button
+            onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={page === totalPages}
+            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium shadow-sm"
+          >
+            Next
+          </button>
+        </div>
+      )}
+      
     </div>
   );
 }

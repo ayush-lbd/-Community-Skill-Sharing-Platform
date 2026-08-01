@@ -42,7 +42,7 @@ const createSession = async (req, res) => { // Removed asyncHandler temporarily
             date,
             duration: duration || 60,
             maxAttendees: maxAttendees || 10,
-            status: 'open',
+            status: 'Open',
             thumbnail: thumbnail.url,
             host: req.user._id 
         });
